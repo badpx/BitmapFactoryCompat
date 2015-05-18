@@ -16,7 +16,16 @@ public class BitmapHelper {
         System.loadLibrary("skbitmap_helper");
     }
 
-    public final static int getAllocationByteCount(Bitmap bitmap) {
+    /**
+     * Returns the size of the allocated memory used to store this bitmap's pixels.
+     *
+     * <p>This can be larger than the result of Bitmap.getByteCount() if a bitmap is reused to
+     * decode other bitmaps of smaller size.</p>
+     *
+     * <p>This value will not change over the lifetime of a Bitmap.</p>
+     *
+     */
+    public static int getAllocationByteCount(Bitmap bitmap) {
         if (null != bitmap) {
             Field mBufferField = null;
             try {
@@ -41,17 +50,17 @@ public class BitmapHelper {
         return -1;
     }
 
-    public static boolean changeBitmapSize(Bitmap bmp, int width, int height) {
+    public static boolean reconfigure(Bitmap bmp, int width, int height) {
         if (null != bmp) {
             int bpp = bmp.getRowBytes() / bmp.getWidth();
             if (bpp * width * height <= getAllocationByteCount(bmp)) {
-                return nativeChangeBitmapSize(bmp, width, height);
+                return nativeReconfigure(bmp, width, height);
             } else {
-                Log.d(TAG, "ByteCount of bitmap is smaller than expect size so can't changed!");
+                Log.d(TAG, "Bitmap not large enough to support new configuration!");
             }
         }
         return false;
     }
 
-    public static native boolean nativeChangeBitmapSize(Bitmap bmp, int width, int height);
+    public static native boolean nativeReconfigure(Bitmap bmp, int width, int height);
 }

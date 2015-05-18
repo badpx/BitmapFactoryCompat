@@ -16,7 +16,7 @@ jmethodID  gBitmap_getHeightMethodID;
 jmethodID  gBitmap_getRowBytesMethodID;
 jmethodID  gBitmap_isMutableMethodID;
 
-JNIEXPORT jboolean JNICALL Java_com_badpx_BitmapFactoryCompat_BitmapHelper_nativeChangeBitmapSize(
+JNIEXPORT jboolean JNICALL Java_com_badpx_BitmapFactoryCompat_BitmapHelper_nativeReconfigure(
         JNIEnv* env, jobject, jobject javaBitmap, jint width, jint height) {
     if (NULL == javaBitmap || width <= 0 || height <= 0) {
         LOGD("Illegal Arguments(Bitmap=%p, width=%d, height = %d) in nativeChangeBitmapSize!",

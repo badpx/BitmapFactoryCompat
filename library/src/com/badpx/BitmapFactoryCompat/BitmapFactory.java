@@ -23,7 +23,7 @@ public class BitmapFactory {
                         new android.graphics.BitmapFactory.Options();
                 tmpOpts.inJustDecodeBounds = true;
                 android.graphics.BitmapFactory.decodeFile(pathName, tmpOpts);
-                changeBitmapSizeForReuse(opts.inBitmap, tmpOpts);
+                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
             }
         }
         return android.graphics.BitmapFactory.decodeFile(pathName, opts);
@@ -42,7 +42,7 @@ public class BitmapFactory {
                         new android.graphics.BitmapFactory.Options();
                 tmpOpts.inJustDecodeBounds = true;
                 android.graphics.BitmapFactory.decodeResourceStream(res, value, is, pad, tmpOpts);
-                changeBitmapSizeForReuse(opts.inBitmap, tmpOpts);
+                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
             }
         }
         return android.graphics.BitmapFactory.decodeResourceStream(res, value, is, pad, opts);
@@ -59,7 +59,7 @@ public class BitmapFactory {
                         new android.graphics.BitmapFactory.Options();
                 tmpOpts.inJustDecodeBounds = true;
                 android.graphics.BitmapFactory.decodeByteArray(data, offset, length, tmpOpts);
-                changeBitmapSizeForReuse(opts.inBitmap, tmpOpts);
+                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
             }
         }
         return android.graphics.BitmapFactory.decodeByteArray(data, offset, length, opts);
@@ -76,7 +76,7 @@ public class BitmapFactory {
                         new android.graphics.BitmapFactory.Options();
                 tmpOpts.inJustDecodeBounds = true;
                 android.graphics.BitmapFactory.decodeStream(is, outPadding, tmpOpts);
-                changeBitmapSizeForReuse(opts.inBitmap, tmpOpts);
+                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
             }
         }
         return android.graphics.BitmapFactory.decodeStream(is, outPadding, opts);
@@ -93,7 +93,7 @@ public class BitmapFactory {
                         new android.graphics.BitmapFactory.Options();
                 tmpOpts.inJustDecodeBounds = true;
                 android.graphics.BitmapFactory.decodeFileDescriptor(fd, outPadding, tmpOpts);
-                changeBitmapSizeForReuse(opts.inBitmap, tmpOpts);
+                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
             }
         }
         return android.graphics.BitmapFactory.decodeFileDescriptor(fd, outPadding, opts);
@@ -110,18 +110,18 @@ public class BitmapFactory {
                         new android.graphics.BitmapFactory.Options();
                 tmpOpts.inJustDecodeBounds = true;
                 android.graphics.BitmapFactory.decodeResource(res, id, tmpOpts);
-                changeBitmapSizeForReuse(opts.inBitmap, tmpOpts);
+                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
             }
         }
 
         return android.graphics.BitmapFactory.decodeResource(res, id, opts);
     }
 
-    private static void changeBitmapSizeForReuse(Bitmap inBitmap, android.graphics.BitmapFactory.Options tmpOpts) {
+    private static void reconfigureBitmapForReuse(Bitmap inBitmap, android.graphics.BitmapFactory.Options tmpOpts) {
         if (!(tmpOpts.outWidth == inBitmap.getWidth() &&
                 tmpOpts.outHeight == inBitmap.getHeight())) {
-            Log.d("BitmapFactory", "inBitmap's dimension not matched, need change size...");
-            BitmapHelper.changeBitmapSize(inBitmap, tmpOpts.outWidth, tmpOpts.outHeight);
+            Log.d("BitmapFactory", "inBitmap's dimension mismatched, need reconfigure...");
+            BitmapHelper.reconfigure(inBitmap, tmpOpts.outWidth, tmpOpts.outHeight);
         }
     }
 
