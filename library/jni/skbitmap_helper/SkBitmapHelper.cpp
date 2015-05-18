@@ -75,14 +75,14 @@ JNIEXPORT jboolean JNICALL Java_com_badpx_BitmapFactoryCompat_BitmapHelper_nativ
 
 bool findAndSetSize(int bitmap, int rowBytes, int origWidth, int origHeight, int dstWidth, int dstHeight) {
     uint32_t* ptr = (uint32_t*)bitmap;
-    for (int i = 0; i < 32; ++i) {
+    for (int i = 0; i < 16; ++i) {
         if (ptr[i] == rowBytes) {
             if (ptr[i + 1] == origWidth && ptr[i + 2] == origHeight) {
                 int bpp = rowBytes / origWidth; // Calc bytes per pixel.
                 ptr[i] = bpp * dstWidth;
                 ptr[i + 1] = dstWidth;
                 ptr[i + 2] = dstHeight;
-                LOGD("Change size success!");
+                LOGD("Change size success(%d)!", i);
                 return true;
             }
         }
