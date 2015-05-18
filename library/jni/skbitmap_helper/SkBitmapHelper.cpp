@@ -6,7 +6,7 @@
 #define  LOG_TAG    "NativeBitmapHelper"
 #define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
  
-bool findAndSetSize(int bitmap, int rowBytes, int origWidth, int origHeight, int dstWidth, int dstHeight);
+bool traversalAndReconfigure(int bitmap, int rowBytes, int origWidth, int origHeight, int dstWidth, int dstHeight);
 
 jfieldID gBitmap_nativeBitmapFieldID;
 jfieldID gBitmap_widthFieldID;
@@ -62,7 +62,7 @@ JNIEXPORT jboolean JNICALL Java_com_badpx_BitmapFactoryCompat_BitmapHelper_nativ
         env->SetIntField(javaBitmap, gBitmap_widthFieldID, width);
         env->SetIntField(javaBitmap, gBitmap_heightFieldID, height);
 
-        if (findAndSetSize(bitmap, rowBytes, origWidth, origHeight, width, height)) {
+        if (traversalAndReconfigure(bitmap, rowBytes, origWidth, origHeight, width, height)) {
             return true;
         } else {
             // Restore Java Bitmap object size when native size was changed failed.
@@ -73,11 +73,12 @@ JNIEXPORT jboolean JNICALL Java_com_badpx_BitmapFactoryCompat_BitmapHelper_nativ
     return false;
 }
 
-bool findAndSetSize(int bitmap, int rowBytes, int origWidth, int origHeight, int dstWidth, int dstHeight) {
+bool traversalAndReconfigure(int bitmap, int rowBytes, int origWidth, int origHeight, int dstWidth, int dstHeight) {
     uint32_t* ptr = (uint32_t*)bitmap;
-    for (int i = 0; i < 16; ++i) {
-        if (ptr[i] == rowBytes) {
-            if (ptr[i + 1] == origWidth && ptr[i + 2] == origHeight) {
+    if (NULL != ptr) {
+        for (int i = 0; i < 16; ++i) {
+            // Assuming the rowBytes/width/height of SkBitmap are continuous in memory
+            if (ptr[i] == rowBytes && ptr[i + 1] == origWidth && ptr[i + 2] == origHeight) {
                 int bpp = rowBytes / origWidth; // Calc bytes per pixel.
                 ptr[i] = bpp * dstWidth;
                 ptr[i + 1] = dstWidth;
