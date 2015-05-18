@@ -2,7 +2,7 @@
 
 ---
 
-Since Andorid API Level 11, BitmapFactory providing the reuse mechanism when decode bitmap: If set BitmapFactory.Options.inBitmap, then decode methods that take the Options object will attempt to reuse this bitmap when loading content. 
+Since Andorid API Level 11, BitmapFactory providing the reuse mechanism when decode bitmap: If set BitmapFactory.Options.inBitmap, then decode methods that take the Options object will attempt to reuse this bitmap when loading content.    
 As of KITKAT, any mutable bitmap can be reused by BitmapFactory to decode any other bitmaps as long as the resulting byte count of the decoded bitmap is less than or equal to the allocated byte count of the reused bitmap, but prior to KITKAT additional constraints apply: The image being decoded (whether as a resource or as a stream) must be in jpeg or png format. **Only equal sized bitmaps are supported!** For resolved this restrict, here provides a BitmapFactory compatibility library.
 
 ## Get Started
@@ -14,7 +14,7 @@ First at all, import this library directory as a module into your Android projec
 TODO.
 
 ### Code sample
-Just like use BitmapFactory of android framework, we set BitmapFactory.Options.inBitmap to a exists bitmap and BitmapFactory.Options.inSampleSize to 1(another restrict prior to KITKAT) for reuse the inBitmap:
+Just like use BitmapFactory of android framework, we set BitmapFactory.Options.inBitmap to a exists bitmap and BitmapFactory.Options.inSampleSize to 1(another restrict prior to KITKAT) for reuse the inBitmap:   
 
 ```
     BitmapFactory.Options opts = new BitmapFactory.Options();
