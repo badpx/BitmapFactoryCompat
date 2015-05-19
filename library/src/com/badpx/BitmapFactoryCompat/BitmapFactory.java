@@ -120,7 +120,7 @@ public class BitmapFactory {
     private static void reconfigureBitmapForReuse(Bitmap inBitmap, android.graphics.BitmapFactory.Options tmpOpts) {
         if (!(tmpOpts.outWidth == inBitmap.getWidth() &&
                 tmpOpts.outHeight == inBitmap.getHeight())) {
-            Log.d("BitmapFactory", "inBitmap's dimension mismatched, need reconfigure...");
+            Log.d("BitmapFactory", "Dimension of Options.inBitmap mismatched, need reconfigure...");
             BitmapHelper.reconfigure(inBitmap, tmpOpts.outWidth, tmpOpts.outHeight);
         }
     }

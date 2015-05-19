@@ -1,2 +1,2 @@
-#APP_STL := gnustl_static
-#APP_CPPFLAGS := -frtti -std=c++11 -fsigned-char
+TARGET_PLATFORM := android-11
+APP_ABI := armeabi armeabi-v7a x86 mips

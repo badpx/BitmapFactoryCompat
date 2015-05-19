@@ -11,6 +11,11 @@ import java.lang.reflect.Field;
  */
 public class BitmapHelper {
     private static final String TAG = "BitmapHelper";
+    private static final int RECONFIG_SUCCESS = 0;
+    private static final int RECONFIG_INIT_FAILED = -1;
+    private static final int RECONFIG_ILLEGAL_ARGS = -2;
+    private static final int RECONFIG_IMMUTABLE_BITMAP = -3;
+    private static final int RECONFIG_TRAVERSAL_FAILED = -4;
 
     static {
         System.loadLibrary("skbitmap_helper");
@@ -54,7 +59,7 @@ public class BitmapHelper {
         if (null != bmp) {
             int bpp = bmp.getRowBytes() / bmp.getWidth();
             if (bpp * width * height <= getAllocationByteCount(bmp)) {
-                return nativeReconfigure(bmp, width, height);
+                return (RECONFIG_SUCCESS == nativeReconfigure(bmp, width, height));
             } else {
                 Log.d(TAG, "Bitmap not large enough to support new configuration!");
             }
@@ -62,5 +67,5 @@ public class BitmapHelper {
         return false;
     }
 
-    public static native boolean nativeReconfigure(Bitmap bmp, int width, int height);
+    public static synchronized native int nativeReconfigure(Bitmap bmp, int width, int height);
 }
