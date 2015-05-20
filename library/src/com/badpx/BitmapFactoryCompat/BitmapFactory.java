@@ -16,15 +16,19 @@ import java.io.InputStream;
 public class BitmapFactory {
     private static boolean compatMode = (Build.VERSION.SDK_INT >= 11 && Build.VERSION.SDK_INT < 19);
 
-    public static Bitmap decodeFile(String pathName, android.graphics.BitmapFactory.Options opts) {
-        if (compatMode) {
-            if (null != opts && null != opts.inBitmap) {
-                android.graphics.BitmapFactory.Options tmpOpts =
-                        new android.graphics.BitmapFactory.Options();
-                tmpOpts.inJustDecodeBounds = true;
-                android.graphics.BitmapFactory.decodeFile(pathName, tmpOpts);
-                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
-            }
+    interface DecodeWorker {
+        void decode(android.graphics.BitmapFactory.Options opts);
+    }
+
+    public static Bitmap decodeFile(final String pathName,
+                                    final android.graphics.BitmapFactory.Options opts) {
+        if (compatMode && null != opts) {
+            reconfigureBitmapForReuse(opts, new DecodeWorker() {
+                @Override
+                public void decode(android.graphics.BitmapFactory.Options opts) {
+                    android.graphics.BitmapFactory.decodeFile(pathName, opts);
+                }
+            });
         }
         return android.graphics.BitmapFactory.decodeFile(pathName, opts);
     }
@@ -33,17 +37,16 @@ public class BitmapFactory {
         return android.graphics.BitmapFactory.decodeFile(pathName);
     }
 
-    public static Bitmap decodeResourceStream(Resources res, TypedValue value,
-                                              InputStream is, Rect pad,
-                                              android.graphics.BitmapFactory.Options opts) {
-        if (compatMode) {
-            if (null != opts && null != opts.inBitmap) {
-                android.graphics.BitmapFactory.Options tmpOpts =
-                        new android.graphics.BitmapFactory.Options();
-                tmpOpts.inJustDecodeBounds = true;
-                android.graphics.BitmapFactory.decodeResourceStream(res, value, is, pad, tmpOpts);
-                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
-            }
+    public static Bitmap decodeResourceStream(final Resources res, final TypedValue value,
+                                              final InputStream is, final Rect pad,
+                                              final android.graphics.BitmapFactory.Options opts) {
+        if (compatMode && null != opts) {
+            reconfigureBitmapForReuse(opts, new DecodeWorker() {
+                @Override
+                public void decode(android.graphics.BitmapFactory.Options opts) {
+                    android.graphics.BitmapFactory.decodeResourceStream(res, value, is, pad, opts);
+                }
+            });
         }
         return android.graphics.BitmapFactory.decodeResourceStream(res, value, is, pad, opts);
     }
@@ -52,15 +55,15 @@ public class BitmapFactory {
         return android.graphics.BitmapFactory.decodeResource(res, id);
     }
 
-    public static Bitmap decodeByteArray(byte[] data, int offset, int length, android.graphics.BitmapFactory.Options opts) {
-        if (compatMode) {
-            if (null != opts && null != opts.inBitmap) {
-                android.graphics.BitmapFactory.Options tmpOpts =
-                        new android.graphics.BitmapFactory.Options();
-                tmpOpts.inJustDecodeBounds = true;
-                android.graphics.BitmapFactory.decodeByteArray(data, offset, length, tmpOpts);
-                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
-            }
+    public static Bitmap decodeByteArray(final byte[] data, final int offset,
+                                         final int length, final android.graphics.BitmapFactory.Options opts) {
+        if (compatMode && null != opts) {
+            reconfigureBitmapForReuse(opts, new DecodeWorker() {
+                @Override
+                public void decode(android.graphics.BitmapFactory.Options opts) {
+                    android.graphics.BitmapFactory.decodeByteArray(data, offset, length, opts);
+                }
+            });
         }
         return android.graphics.BitmapFactory.decodeByteArray(data, offset, length, opts);
     }
@@ -69,15 +72,15 @@ public class BitmapFactory {
         return android.graphics.BitmapFactory.decodeByteArray(data, offset, length);
     }
 
-    public static Bitmap decodeStream(InputStream is, Rect outPadding, android.graphics.BitmapFactory.Options opts) {
-        if (compatMode) {
-            if (null != opts && null != opts.inBitmap) {
-                android.graphics.BitmapFactory.Options tmpOpts =
-                        new android.graphics.BitmapFactory.Options();
-                tmpOpts.inJustDecodeBounds = true;
-                android.graphics.BitmapFactory.decodeStream(is, outPadding, tmpOpts);
-                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
-            }
+    public static Bitmap decodeStream(final InputStream is, final Rect outPadding,
+                                      final android.graphics.BitmapFactory.Options opts) {
+        if (compatMode && null != opts) {
+            reconfigureBitmapForReuse(opts, new DecodeWorker() {
+                @Override
+                public void decode(android.graphics.BitmapFactory.Options opts) {
+                    android.graphics.BitmapFactory.decodeStream(is, outPadding, opts);
+                }
+            });
         }
         return android.graphics.BitmapFactory.decodeStream(is, outPadding, opts);
     }
@@ -86,15 +89,15 @@ public class BitmapFactory {
         return android.graphics.BitmapFactory.decodeStream(is);
     }
 
-    public static Bitmap decodeFileDescriptor(FileDescriptor fd, Rect outPadding, android.graphics.BitmapFactory.Options opts) {
-        if (compatMode) {
-            if (null != opts && null != opts.inBitmap) {
-                android.graphics.BitmapFactory.Options tmpOpts =
-                        new android.graphics.BitmapFactory.Options();
-                tmpOpts.inJustDecodeBounds = true;
-                android.graphics.BitmapFactory.decodeFileDescriptor(fd, outPadding, tmpOpts);
-                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
-            }
+    public static Bitmap decodeFileDescriptor(final FileDescriptor fd, final Rect outPadding,
+                                              final android.graphics.BitmapFactory.Options opts) {
+        if (compatMode && null != opts) {
+            reconfigureBitmapForReuse(opts, new DecodeWorker() {
+                @Override
+                public void decode(android.graphics.BitmapFactory.Options opts) {
+                    android.graphics.BitmapFactory.decodeFileDescriptor(fd, outPadding, opts);
+                }
+            });
         }
         return android.graphics.BitmapFactory.decodeFileDescriptor(fd, outPadding, opts);
     }
@@ -103,26 +106,42 @@ public class BitmapFactory {
         return android.graphics.BitmapFactory.decodeFileDescriptor(fd);
     }
 
-    public static Bitmap decodeResource(Resources res, int id, android.graphics.BitmapFactory.Options opts) {
-        if (compatMode) {
-            if (null != opts && null != opts.inBitmap) {
-                android.graphics.BitmapFactory.Options tmpOpts =
-                        new android.graphics.BitmapFactory.Options();
-                tmpOpts.inJustDecodeBounds = true;
-                android.graphics.BitmapFactory.decodeResource(res, id, tmpOpts);
-                reconfigureBitmapForReuse(opts.inBitmap, tmpOpts);
-            }
+    public static Bitmap decodeResource(final Resources res, final int id,
+                                        android.graphics.BitmapFactory.Options opts) {
+        if (compatMode && null != opts) {
+            reconfigureBitmapForReuse(opts, new DecodeWorker() {
+                @Override
+                public void decode(android.graphics.BitmapFactory.Options opts) {
+                    android.graphics.BitmapFactory.decodeResource(res, id, opts);
+                }
+            });
         }
 
         return android.graphics.BitmapFactory.decodeResource(res, id, opts);
     }
 
-    private static void reconfigureBitmapForReuse(Bitmap inBitmap, android.graphics.BitmapFactory.Options tmpOpts) {
-        if (!(tmpOpts.outWidth == inBitmap.getWidth() &&
-                tmpOpts.outHeight == inBitmap.getHeight())) {
-            Log.d("BitmapFactory", "Dimension of Options.inBitmap mismatched, need reconfigure...");
-            BitmapHelper.reconfigure(inBitmap, tmpOpts.outWidth, tmpOpts.outHeight);
+    private static void reconfigureBitmapForReuse(android.graphics.BitmapFactory.Options opts,
+                                                  DecodeWorker decodeWorker) {
+        if (null != decodeWorker && null != opts.inBitmap &&
+                !opts.inJustDecodeBounds && opts.inSampleSize <= 1) {
+            Bitmap inBitmap = opts.inBitmap;
+            opts.inBitmap = null;
+            opts.inJustDecodeBounds = true;
+            opts.inSampleSize = 1;  // Ensure sample size to 1 for reuse success.
+
+            // Just decode bitmap bounds:
+            decodeWorker.decode(opts);
+
+            int width = opts.outWidth;
+            int height = opts.outHeight;
+            if (!(width == inBitmap.getWidth() &&
+                    height == inBitmap.getHeight())) {
+                Log.d("BitmapFactory", "Dimension of Options.inBitmap mismatched, need reconfigure...");
+                BitmapHelper.reconfigure(inBitmap, width, height);
+            }
+
+            opts.inJustDecodeBounds = false;
+            opts.inBitmap = inBitmap;
         }
     }
-
 }

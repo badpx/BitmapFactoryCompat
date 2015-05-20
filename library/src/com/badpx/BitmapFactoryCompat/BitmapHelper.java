@@ -58,6 +58,10 @@ public class BitmapHelper {
     public static boolean reconfigure(Bitmap bmp, int width, int height) {
         if (null != bmp) {
             int bpp = bmp.getRowBytes() / bmp.getWidth();
+            if (bpp > 4) {
+                Log.d(TAG, "Invalid BPP = " + bpp);
+                return false;
+            }
             if (bpp * width * height <= getAllocationByteCount(bmp)) {
                 return (RECONFIG_SUCCESS == nativeReconfigure(bmp, width, height));
             } else {

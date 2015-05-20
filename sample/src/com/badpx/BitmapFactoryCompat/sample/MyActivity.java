@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -28,10 +29,10 @@ public class MyActivity extends Activity implements View.OnClickListener {
         mReuseBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.map, opts);
 
         opts.inBitmap = mReuseBitmap;
-        opts.inSampleSize = 1;  // Cannot reuse bitmap with sampleSize != 1
         try {
             Bitmap image = com.badpx.BitmapFactoryCompat.BitmapFactory.decodeResource(
                     getResources(), R.drawable.image, opts);
+            Log.d("MyActivity", String.format("Reuse bitmap %s", image == mReuseBitmap ? "Success!" : "Failed!"));
             mImageView.setImageBitmap(image);
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -42,7 +43,6 @@ public class MyActivity extends Activity implements View.OnClickListener {
     public void onClick(View view) {
         BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inBitmap = mReuseBitmap;
-        opts.inSampleSize = 1;
         try {
             Bitmap image = com.badpx.BitmapFactoryCompat.BitmapFactory.decodeResource(getResources(),
                     0 == (mClickCount % 2) ? R.drawable.ruby : R.drawable.map, opts);
