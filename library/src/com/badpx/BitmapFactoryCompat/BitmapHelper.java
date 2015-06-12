@@ -21,6 +21,8 @@ public class BitmapHelper {
         System.loadLibrary("skbitmap_helper");
     }
 
+    private static volatile Field mBufferField;
+
     /**
      * Returns the size of the allocated memory used to store this bitmap's pixels.
      *
@@ -32,25 +34,32 @@ public class BitmapHelper {
      */
     public static int getAllocationByteCount(Bitmap bitmap) {
         if (null != bitmap) {
-            Field mBufferField = null;
+            Object buffer = null;
             try {
-                mBufferField = Bitmap.class.getDeclaredField("mBuffer");
-                Object buffer = mBufferField.get(bitmap);
-                if (null == buffer || !buffer.getClass().isArray()) {
-                    // native backed bitmaps don't support reconfiguration,
-                    // so alloc size is always content size
-                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
-                        return bitmap.getByteCount();
-                    } else {
-                        return bitmap.getRowBytes() * bitmap.getHeight();
+                if (null == mBufferField) {
+                    mBufferField = Bitmap.class.getDeclaredField("mBuffer");
+                    if (!mBufferField.isAccessible()) {
+                        mBufferField.setAccessible(true);
                     }
                 }
-                return ((byte[])buffer).length;
+
+                buffer = mBufferField.get(bitmap);
             } catch (NoSuchFieldException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
+
+            if (null == buffer || !buffer.getClass().isArray()) {
+                // native backed bitmaps don't support reconfiguration,
+                // so alloc size is always content size
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
+                    return bitmap.getByteCount();
+                } else {
+                    return bitmap.getRowBytes() * bitmap.getHeight();
+                }
+            }
+            return ((byte[]) buffer).length;
         }
         return -1;
     }
