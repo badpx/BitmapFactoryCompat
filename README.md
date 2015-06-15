@@ -14,22 +14,18 @@ TODO.
 Just like use BitmapFactory of android framework, we set BitmapFactory.Options.inBitmap to a exists bitmap and BitmapFactory.Options.inSampleSize to 1(another restrict prior to KITKAT) for reuse the inBitmap:
 
 ```
-    BitmapFactory.Options opts = new BitmapFactory.Options(;
+    BitmapFactory.Options opts = new BitmapFactory.Options();
     opts.inMutable = true; // The current implementation necessitates that the reused bitmap be mutable
-    mReuseBitmap = BitmapFactory.decodeResource(getResources(, R.drawable.image, opts);
+    mReuseBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.map, opts);
 
     // Now reuse above bitmap object to decode another picture:
     opts.inBitmap = mReuseBitmap;
-    opts.inSampleSize = 1;  // Cannot reuse bitmap with sampleSize != 1
     try {
         Bitmap image = com.badpx.BitmapFactoryCompat.BitmapFactory.decodeResource(
-                    getResources(, R.drawable.ic_launcher, opts);
+            getResources(), R.drawable.image, opts);
     } catch (IllegalArgumentException e) {
-        e.printStackTrace(;
+        e.printStackTrace();
     }
+
 ```
 
-
-
-
-))))
