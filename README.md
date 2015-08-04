@@ -1,6 +1,6 @@
 ince Andorid API Level 11(Honeycomb), BitmapFactory providing the reuse mechanism when decode bitmap: If set BitmapFactory.Options.inBitmap, then decode methods that take the Options object will attempt to reuse this bitmap when loading content.   
 As of KITKAT, any mutable bitmap can be reused by BitmapFactory to decode any other bitmaps as long as the resulting byte count of the decoded bitmap is less than or equal to the allocated byte count of the reused bitmap.   
-But prior to KITKAT additional constraints apply: The image being decoded (whether as a resource or as a stream) must be in jpeg or png format. **Only equal sized bitmaps are supported!** For resolved this restrict, here provides a BitmapFactory compatibility library.
+But prior to KITKAT additional constraints apply: The image being decoded (whether as a resource or as a stream) must be in jpeg or png format, and only equal sized bitmaps are supported. **For resolved this restrict, here provides a BitmapFactory compatibility library**.
 
 ## Get Started
 
