@@ -1,6 +1,8 @@
 package com.badpx.BitmapFactoryCompat.sample;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -8,11 +10,16 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 public class MyActivity extends Activity implements View.OnClickListener {
 
     private int mClickCount;
     private ImageView mImageView;
     private Bitmap mReuseBitmap;
+    public static final String[] IMAGE_FILES = new String[]{"food.jpg", "ruby.jpg", "image.png"};
+    private BitmapFactory.Options mOptions = new BitmapFactory.Options();
 
     /**
      * Called when the activity is first created.
@@ -22,18 +29,11 @@ public class MyActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         mImageView = (ImageView) findViewById(R.id.imageView);
-        mImageView.setOnClickListener(this);
+        findViewById(R.id.button).setOnClickListener(this);
 
-        BitmapFactory.Options opts = new BitmapFactory.Options();
-        opts.inMutable = true;
-        mReuseBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.food, opts);
 
         try {
-            opts.inBitmap = mReuseBitmap;
-            opts.inMutable = true;
-            Bitmap image = com.badpx.BitmapFactoryCompat.BitmapFactory.decodeResource(
-                    getResources(), R.drawable.image, opts);
-            Log.d("MyActivity", String.format("Reuse bitmap %s", image == mReuseBitmap ? "Success!" : "Failed!"));
+            Bitmap image = mReuseBitmap = getBitmapFromAsset(this, "food.jpg");
             mImageView.setImageBitmap(image);
         } catch (IllegalArgumentException e) {
             e.printStackTrace();
@@ -42,16 +42,32 @@ public class MyActivity extends Activity implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        BitmapFactory.Options opts = new BitmapFactory.Options();
-        opts.inBitmap = mReuseBitmap;
+        String file = IMAGE_FILES[++mClickCount % 3]; // display next image file.
+
         try {
-            Bitmap image = com.badpx.BitmapFactoryCompat.BitmapFactory.decodeResource(getResources(),
-                    0 == (mClickCount % 2) ? R.drawable.ruby : R.drawable.food, opts);
+            Bitmap image = getBitmapFromAsset(this, file);
             Log.d("MyActivity", String.format("Reuse Bitmap %s", image == mReuseBitmap ? "Success!" : "Failed!"));
             mImageView.setImageBitmap(image);
-            mClickCount++;
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // create Bitmap from assets image file, and reuse inBitmap as can as possible.
+    public Bitmap getBitmapFromAsset(Context context, String filePath) {
+        AssetManager assetManager = context.getAssets();
+
+        InputStream is;
+        Bitmap bitmap = null;
+        mOptions.inBitmap = mReuseBitmap;
+        mOptions.inMutable = true;
+        try {
+            is = assetManager.open(filePath);
+            bitmap = com.badpx.BitmapFactoryCompat.BitmapFactory.decodeStream(is, null, mOptions);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return bitmap;
     }
 }
