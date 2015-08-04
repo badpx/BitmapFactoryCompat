@@ -127,21 +127,28 @@ public class BitmapFactory {
             Bitmap inBitmap = opts.inBitmap;
             opts.inBitmap = null;
             opts.inJustDecodeBounds = true;
-            opts.inSampleSize = 1;  // Ensure sample size to 1 for reuse success.
+            opts.inDensity = opts.inTargetDensity = 0;
 
             // Just decode bitmap bounds:
             decodeWorker.decode(opts);
 
+            opts.inJustDecodeBounds = false;
+            opts.inBitmap = inBitmap;
+            opts.inSampleSize = 1;  // Ensure sample size to 1 for reuse success.
+
+            if (opts.inScaled && opts.inTargetDensity != 0 && opts.inDensity != 0) {
+                // If the bitmap will be scaled then it can't be reused.
+                return ;
+            }
+
             int width = opts.outWidth;
             int height = opts.outHeight;
+
             if (!(width == inBitmap.getWidth() &&
                     height == inBitmap.getHeight())) {
                 Log.d("BitmapFactory", "Dimension of Options.inBitmap mismatched, need reconfigure...");
                 BitmapHelper.reconfigure(inBitmap, width, height);
             }
-
-            opts.inJustDecodeBounds = false;
-            opts.inBitmap = inBitmap;
         }
     }
 }

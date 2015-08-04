@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <jni.h>
 #include <android/log.h>
+#include <android/bitmap.h>
 #include "SkBitmapHelper.h"
 
 #define  LOG_TAG    "NativeBitmapHelper"
@@ -13,15 +14,16 @@
 #define IMMUTABLE_BMP       (-3)
 #define TRAVERSAL_FAILED    (-4)
  
-bool traversalAndReconfigure(int bitmap, int rowBytes, int origWidth, int origHeight, int dstWidth, int dstHeight);
+int traversalForFieldOffset(int bitmap, const AndroidBitmapInfo& bmpInfo);
+bool reconfigure(int bitmap, const AndroidBitmapInfo& bmpInfo, int width, int height);
+int computeBytesPerPixel(uint32_t config);
 
-int gInitFlag;
+static int gInitFlag;
+static int gFieldOffset;
+
 jfieldID gBitmap_nativeBitmapFieldID;
 jfieldID gBitmap_widthFieldID;
 jfieldID gBitmap_heightFieldID;
-jmethodID  gBitmap_getWidthMethodID;
-jmethodID  gBitmap_getHeightMethodID;
-jmethodID  gBitmap_getRowBytesMethodID;
 jmethodID  gBitmap_isMutableMethodID;
 
 JNIEXPORT jint JNICALL Java_com_badpx_BitmapFactoryCompat_BitmapHelper_nativeReconfigure(
@@ -44,12 +46,6 @@ JNIEXPORT jint JNICALL Java_com_badpx_BitmapFactoryCompat_BitmapHelper_nativeRec
         if (NULL == gBitmap_widthFieldID) return INIT_FAILED;
         gBitmap_heightFieldID = env->GetFieldID(bitmap_class, "mHeight", "I");
         if (NULL == gBitmap_heightFieldID) return INIT_FAILED;
-        gBitmap_getWidthMethodID = env->GetMethodID(bitmap_class, "getWidth", "()I");
-        if (NULL == gBitmap_getWidthMethodID) return INIT_FAILED;
-        gBitmap_getHeightMethodID = env->GetMethodID(bitmap_class, "getHeight", "()I");
-        if (NULL == gBitmap_getHeightMethodID) return INIT_FAILED;
-        gBitmap_getRowBytesMethodID = env->GetMethodID(bitmap_class, "getRowBytes", "()I");
-        if (NULL == gBitmap_getRowBytesMethodID) return INIT_FAILED;
         gBitmap_isMutableMethodID = env->GetMethodID(bitmap_class, "isMutable", "()Z");
         if (NULL == gBitmap_isMutableMethodID) return INIT_FAILED;
 
@@ -67,38 +63,47 @@ JNIEXPORT jint JNICALL Java_com_badpx_BitmapFactoryCompat_BitmapHelper_nativeRec
     }
 
     int bitmap = env->GetIntField(javaBitmap, gBitmap_nativeBitmapFieldID);
-    int rowBytes = env->CallIntMethod(javaBitmap, gBitmap_getRowBytesMethodID);
-    int origWidth = env->CallIntMethod(javaBitmap, gBitmap_getWidthMethodID);
-    int origHeight = env->CallIntMethod(javaBitmap, gBitmap_getHeightMethodID);
 
-    LOGD("Attempt reconfigure Bitmap@%d(with rowBytes %d) from (%dx%d) to (%dx%d)", 
-            bitmap, rowBytes, origWidth, origHeight, width, height);
+    AndroidBitmapInfo bmpInfo;
+    AndroidBitmap_getInfo(env, javaBitmap, &bmpInfo);
+    LOGD("Attempt to reconfigure Bitmap@%d(with rowBytes %d) from (%dx%d) to (%dx%d)", 
+            bitmap, bmpInfo.stride, bmpInfo.width, bmpInfo.height, width, height);
 
-    env->SetIntField(javaBitmap, gBitmap_widthFieldID, width);
-    env->SetIntField(javaBitmap, gBitmap_heightFieldID, height);
+    if (reconfigure(bitmap, bmpInfo, width, height)) {
+        // Update width/height fields of java object.
+        env->SetIntField(javaBitmap, gBitmap_widthFieldID, width);
+        env->SetIntField(javaBitmap, gBitmap_heightFieldID, height);
 
-    if (traversalAndReconfigure(bitmap, rowBytes, origWidth, origHeight, width, height)) {
         return RECONFIGURE_SUCCESS;
-    } else {
-        // Restore Java Bitmap object size when native reconfigure was failed.
-        env->SetIntField(javaBitmap, gBitmap_widthFieldID, origWidth);
-        env->SetIntField(javaBitmap, gBitmap_heightFieldID, origHeight);
     }
 
     return TRAVERSAL_FAILED;
 }
 
-bool traversalAndReconfigure(int bitmap, int rowBytes, int origWidth, int origHeight, int dstWidth, int dstHeight) {
+JNIEXPORT jint JNICALL Java_com_badpx_BitmapFactoryCompat_BitmapHelper_nativeGetBytesPerPixel(
+        JNIEnv* env, jobject, jobject javaBitmap) {
+    if (NULL != javaBitmap) {
+        AndroidBitmapInfo bmpInfo;
+        AndroidBitmap_getInfo(env, javaBitmap, &bmpInfo);
+        return computeBytesPerPixel(bmpInfo.format);
+    }
+    return 0;
+}
+
+bool reconfigure(int bitmap, const AndroidBitmapInfo& bmpInfo, int dstWidth, int dstHeight) {
     uint32_t* ptr = (uint32_t*)bitmap;
     if (NULL != ptr) {
-        for (int i = 0; i < TRAVERSAL_TIMES; ++i) {
-            // Assuming the rowBytes/width/height of SkBitmap are continuous in memory model
-            if (ptr[i] == rowBytes && ptr[i + 1] == origWidth && ptr[i + 2] == origHeight) {
-                int bpp = rowBytes / origWidth; // Calc bytes per pixel.
-                ptr[i] = bpp * dstWidth;
-                ptr[i + 1] = dstWidth;
-                ptr[i + 2] = dstHeight;
-                LOGD("Native reconfigure success(%d)", i);
+        int fieldOffset = traversalForFieldOffset(bitmap, bmpInfo);
+
+        if (fieldOffset > 0) {
+            int bpp = computeBytesPerPixel(bmpInfo.format);
+            LOGD("Native bitmap bpp = %d.", bpp);
+
+            if (bpp > 0) {
+                ptr[fieldOffset] = bpp * dstWidth;
+                ptr[fieldOffset + 1] = dstWidth;
+                ptr[fieldOffset + 2] = dstHeight;
+                LOGD("Native reconfigure success!");
                 return true;
             }
         }
@@ -107,3 +112,44 @@ bool traversalAndReconfigure(int bitmap, int rowBytes, int origWidth, int origHe
     LOGD("Native reconfigure failed!");
     return false;
 }
+
+int traversalForFieldOffset(int bitmap, const AndroidBitmapInfo& bmpInfo) {
+    uint32_t* ptr = (uint32_t*)bitmap;
+    if (NULL != ptr && 0 == gFieldOffset) {
+        for (int i = 0; i < TRAVERSAL_TIMES; ++i) {
+            // Assuming the rowBytes/width/height of SkBitmap are continuous in memory model
+            if (ptr[i] == bmpInfo.stride && ptr[i + 1] == bmpInfo.width && ptr[i + 2] == bmpInfo.height) {
+                gFieldOffset = i;
+                LOGD("traversal for field offset success(offset=%d)", i);
+                return gFieldOffset;
+            }
+        }
+        gFieldOffset = -1;
+        LOGD("traversal for field offset failed!");
+    }
+    return gFieldOffset;
+}
+
+int computeBytesPerPixel(uint32_t config) {
+    int bpp;
+    switch (config) {
+        case ANDROID_BITMAP_FORMAT_NONE:
+            bpp = 0;   // not applicable
+            break;
+        case ANDROID_BITMAP_FORMAT_A_8:
+            bpp = 1;
+            break;
+        case ANDROID_BITMAP_FORMAT_RGB_565:
+        case ANDROID_BITMAP_FORMAT_RGBA_4444:
+            bpp = 2;
+            break;
+        case ANDROID_BITMAP_FORMAT_RGBA_8888:
+            bpp = 4;
+            break;
+        default:
+            bpp = 0;   // error
+            break;
+    }
+    return bpp;
+}
+

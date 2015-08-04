@@ -26,10 +26,11 @@ public class MyActivity extends Activity implements View.OnClickListener {
 
         BitmapFactory.Options opts = new BitmapFactory.Options();
         opts.inMutable = true;
-        mReuseBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.map, opts);
+        mReuseBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.food, opts);
 
-        opts.inBitmap = mReuseBitmap;
         try {
+            opts.inBitmap = mReuseBitmap;
+            opts.inMutable = true;
             Bitmap image = com.badpx.BitmapFactoryCompat.BitmapFactory.decodeResource(
                     getResources(), R.drawable.image, opts);
             Log.d("MyActivity", String.format("Reuse bitmap %s", image == mReuseBitmap ? "Success!" : "Failed!"));
@@ -45,7 +46,8 @@ public class MyActivity extends Activity implements View.OnClickListener {
         opts.inBitmap = mReuseBitmap;
         try {
             Bitmap image = com.badpx.BitmapFactoryCompat.BitmapFactory.decodeResource(getResources(),
-                    0 == (mClickCount % 2) ? R.drawable.ruby : R.drawable.map, opts);
+                    0 == (mClickCount % 2) ? R.drawable.ruby : R.drawable.food, opts);
+            Log.d("MyActivity", String.format("Reuse Bitmap %s", image == mReuseBitmap ? "Success!" : "Failed!"));
             mImageView.setImageBitmap(image);
             mClickCount++;
         } catch (Exception e) {

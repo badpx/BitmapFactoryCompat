@@ -66,11 +66,7 @@ public class BitmapHelper {
 
     public static boolean reconfigure(Bitmap bmp, int width, int height) {
         if (null != bmp) {
-            int bpp = bmp.getRowBytes() / bmp.getWidth();
-            if (bpp > 4) {
-                Log.d(TAG, "Invalid BPP = " + bpp);
-                return false;
-            }
+            int bpp = getBytesPerPixel(bmp.getConfig());
             if (bpp * width * height <= getAllocationByteCount(bmp)) {
                 return (RECONFIG_SUCCESS == nativeReconfigure(bmp, width, height));
             } else {
@@ -78,6 +74,19 @@ public class BitmapHelper {
             }
         }
         return false;
+    }
+
+    static int getBytesPerPixel(Bitmap.Config config) {
+        if (config == Bitmap.Config.ARGB_8888) {
+            return 4;
+        } else if (config == Bitmap.Config.RGB_565) {
+            return 2;
+        } else if (config == Bitmap.Config.ARGB_4444) {
+            return 2;
+        } else if (config == Bitmap.Config.ALPHA_8) {
+            return 1;
+        }
+        return 1;
     }
 
     public static synchronized native int nativeReconfigure(Bitmap bmp, int width, int height);
